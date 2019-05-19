@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<script src="http://g.tbcdn.cn/mtb/lib-flexible/0.3.2/??flexible_css.js,flexible.js"
+></script>
+	<link rel="stylesheet" href="css/index.css">
+	<title>01-横向滑动</title>
+	<style>
+	*{
+		margin:0;
+		padding:0;
+	}
+  #app .wrapper{
+  	height: 6.666667rem;
+  	overflow: hidden;
+  	margin-top:0.266667rem;
+  }
+  #app .wrapper .content {
+  	width: 100%;
+  	display: flex;
+  }
+  #app .wrapper .content_item {
+		font-size: 30px;
+		border:1px solid blue;
+		background-color: red;
+		height: 6.666667rem;
+  }
+  #app .wrapper .content_item .name{
+		font-size: 14px;
+		background-color: pink;
+  }
+
+  #app .tab_wrapper {
+			overflow: hidden;
+			display: flex;
+  }
+   #app .tab_wrapper .tab_content{
+			display: flex;
+			list-style:none;
+			/*font-size:0.213333rem;*/
+			font-size:32px;
+  }
+ 	#app .tab_wrapper .tab_content .tab_list{
+			border:1px solid yellow;
+			width:2.666667rem;
+  }
+  	#app .tab_wrapper .tab_content .tab_list.active{
+			background: yellow;
+  }
+   #app .tab_wrapper .tab_content .tab_list .text{
+	    line-height: 0.5rem;
+	    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+		<!-- 头部导航 -->
+		<div class="tab_wrapper" ref="tab_wrapper">
+				<div class="tab_content" ref="tab_content">
+					<div class="tab_list tab" v-for="(item,i) in title" :key="i" :class="{'active':currentIndex === i}">
+							<div class="text">{{item.name}}</div>
+					</div>
+				</div>
+		</div>
+		<!-- 内容页 -->
+		<div class="wrapper" ref="wrapper">
+				<div class="content" :style="{'width':`${largeWidth}px`}">
+					<div class="content_item hook" :style="{'width':`${currentWidth}px`}" v-for="(item,i) in list" :key="i">
+						{{item.title}}
+					</div>
+			</div>
+		</div>	
+</div>
+
+<script src="js/vue.js"></script>
+<script src="js/better-scroll.min.js"></script>
+<script>
+
+	const vm = new Vue({
+		el:'#app',
+		data:{
+			currentWidth:document.body.clientWidth, //当前屏幕的宽度
+			largeWidth:0, //最大宽度
+			scrollX:0,
+			pageIndex:0,
+			title:[
+				{
+					name:"我是第一"
+				},
+				{
+					name:"我是第二"
+				},
+				{
+					name:"我是第三"
+				},
+				{
+					name:"我是第四"
+				},
+				{
+					name:"我是第五"
+				},
+				{
+					name:"我是第6"
+				},
+				{
+					name:"我是第7"
+				},
+				{
+					name:"我是第8"
+				},
+			],
+			list:[
+				{
+					title:"我是1"
+				},
+				{
+					title:"我是2"
+				},
+				{
+					title:"我是3"
+				},
+				{
+					title:"我是4"
+				},
+				{
+					title:"我是5"
+				},
+				{
+					title:"我是6"
+				},
+				{
+					title:"我是7"
+				},
+				{
+					title:"我是"
+				}
+			],
+			listWidth:[]
+		},
+		computed:{
+
+				currentIndex() {
+					for(let i =0; i <= this.listWidth.length; i++) {
+							let w1 = this.listWidth[i]
+							let w2 = this.listWidth[i+1]
+							if(!w2 || (this.scrollX >= w1 && this.scrollX < w2)) {
+								return i
+							}
+							this._iniTabSTocroll(i)
+
+						}						
+						return 0
+				},
+		},
+		methods:{
+			//获取屏幕的宽度，并且乘以内容页的数量，得到能滚动内容区域的最大宽度
+			getLargeWidth() {
+				this.largeWidth = document.body.clientWidth *  this.list.length
+			},
+
+			_initScroll() {
+				//内容页
+				this.Scroll = new BScroll(this.$refs.wrapper, {
+					click:true,
+					scrollX:true,
+					snap:{
+						threshold:0.3
+					},
+					probeType:3
+				})
+				//顶部导航栏
+				this.TabScroll = new BScroll(this.$refs.tab_wrapper,{
+					click:true,
+					probeType:3,
+					scrollX:true
+				})
+				//监听内容页滚动
+				this.Scroll.on('scroll',(pos)=> {
+					this.scrollX =	Math.abs(Math.round(pos.x))
+				})
+
+
+				
+			},
+			//顶部导航栏跳转
+			_iniTabSTocroll(index) {
+					let tabList = this.$refs.tab_content.getElementsByClassName("tab")
+					let el = tabList[index]
+					this.TabScroll.scrollToElement(el,300)
+			},
+			//计算高度
+			culcalWidth() {
+					let liList = this.$refs.wrapper.getElementsByClassName("hook")
+					let width = 0
+					this.listWidth.push(width)
+					for(let i = 0; i < liList.length; i++) {
+						let item = liList[i]
+						width += item.getBoundingClientRect().width 
+						this.listWidth.push(width)
+					}
+			},
+			//计算宽度
+			culcalWindowWidth() {
+				window.onresize = () => {
+					 this.currentWidth = document.body.clientWidth
+					 this.largeWidth = this.currentWidth * this.list.length
+				}
+			}
+			
+		},
+		created(){
+			this.culcalWindowWidth()
+			this.getLargeWidth()
+		},
+		mounted(){
+			this.$nextTick(()=>{
+			this._initScroll()
+			this.culcalWidth()
+
+			})
+		}
+	})
+</script>
+</body>
+</html>
